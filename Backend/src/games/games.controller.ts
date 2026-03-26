@@ -1,6 +1,5 @@
 import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
 import { GamesService } from './games.service';
-import { PrismaService } from 'src/prisma/prisma.service';
 
 @Controller('games')
 export class GamesController {
