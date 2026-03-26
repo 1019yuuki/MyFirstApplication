@@ -1,0 +1,14 @@
+.Input{
+    margin: 5px 0px 5px 0px;
+    padding: 15px;
+    width: 100%;
+    border-radius: 10px;
+    box-sizing: border-box;
+    outline: none;
+    background-color: #DFF;
+    border: 1px solid #BBB;
+    font-size: large;
+    &:focus{
+        border-color: #333;
+    } 
+}

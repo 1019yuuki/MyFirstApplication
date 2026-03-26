@@ -1,0 +1,41 @@
+services:
+  frontend:
+    container_name: frontend
+    build: ./frontend
+    ports:
+      - 5173:5173
+      - 4173:4173
+    volumes:
+      - ./Frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+
+  backend:
+    container_name: backend
+    build: ./backend
+    ports:
+      - 3000:3000
+    volumes:
+      - ./Backend:/app
+      - /app/node_modules
+    environment:
+      - DATABASE_URI=${DATABASE_URL}
+    depends_on:
+      - database
+
+  database:
+    image: postgres:18-alpine
+    container_name: database
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=app
+    ports:
+      - 5432:5432
+      - 5556:5555
+    volumes:
+      - postgres_data:/var/lib/postgresql
+
+volumes:
+  postgres_data:

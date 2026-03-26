@@ -1,0 +1,20 @@
+.PrimaryButton{
+    margin: 5px 0px 5px 0px;
+    padding: 15px;
+    background-color: #5CC;
+    border-radius: 10px;
+    width: 100%;
+    font-size: larger;
+    color: #333;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.25s;
+    &:hover{
+        background-color: #4BB;
+    }
+    &:active{
+        transition: none;
+        transform: scale(0.99);
+        background-color: #1BB;
+    }
+}

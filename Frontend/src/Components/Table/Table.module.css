@@ -1,0 +1,22 @@
+.Table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  background-color: #FFF;
+  border-color: #DDD;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 5px 5px 10px #CCC;
+}
+
+.Table th, .Table td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid #DDD;
+}
+
+.Table th {
+  background-color: #AFF;
+  font-weight: bold;
+  color: #333;
+}
