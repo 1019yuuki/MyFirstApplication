@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { StoneType } from "generated/prisma/enums";
-import { Board } from "src/games/domain/entities/board.model";
-import { Game } from "src/games/domain/entities/game.model";
-import { Stone } from "src/games/domain/entities/stone.model";
+import { Board } from "src/games/domain/value-objects/board.vo";
+import { Game } from "src/games/domain/entities/game.entity";
+import { Stone } from "src/games/domain/value-objects/stone.vo";
 import { IGamesRepository } from "src/games/domain/repositories/games.repository.interface";
 import { PrismaService } from "src/prisma/prisma.service";
 
@@ -23,7 +23,7 @@ export class PrismaGamesRepository implements IGamesRepository {
         return new Game({
             id: created.id,
             board: this.ConvertBoardFromFlat(created.board),
-            nextStone: new Stone(created.nextStone),
+            nextStone: this.createStone(created.nextStone),
             version: created.version
         });
     }
@@ -42,7 +42,7 @@ export class PrismaGamesRepository implements IGamesRepository {
         return new Game({
             id: game.id,
             board: this.ConvertBoardFromFlat(game.board),
-            nextStone: new Stone(game.nextStone),
+            nextStone: this.createStone(game.nextStone),
             version: game.version
         });
     }
@@ -56,7 +56,7 @@ export class PrismaGamesRepository implements IGamesRepository {
             },
             data: {
                 board: this.ConvertBoardToFlat(board),
-                nextStone: nextStone.stoneType,
+                nextStone: nextStone.type,
                 version: version++
             }
         });
@@ -64,13 +64,13 @@ export class PrismaGamesRepository implements IGamesRepository {
         return new Game({
             id: updated.id,
             board: this.ConvertBoardFromFlat(updated.board),
-            nextStone: new Stone(updated.nextStone),
+            nextStone: this.createStone(updated.nextStone),
             version: updated.version
         });
     }
 
     private ConvertBoardToFlat(board: Board): StoneType[] {
-        return board.grid.flat().map((stone) => stone.stoneType);
+        return board.grid.flat().map((stone) => stone.type);
     }
 
     private ConvertBoardFromFlat(flatBoard: StoneType[]): Board {
@@ -79,7 +79,7 @@ export class PrismaGamesRepository implements IGamesRepository {
         let row: Stone[] = [];
         const result: Stone[][] = [];
         flatBoard.forEach((cell) => {
-            row.push(new Stone(cell));
+            row.push(this.createStone(cell));
 
             if (index === 7) {
                 result.push(row);
@@ -91,6 +91,17 @@ export class PrismaGamesRepository implements IGamesRepository {
             }
         });
 
-        return new Board(result);
+        return Board.create(result);
+    }
+
+    private createStone(stoneType: StoneType): Stone {
+        switch (stoneType) {
+            case "BLACK":
+                return Stone.black();
+            case "WHITE":
+                return Stone.white();
+            case "NONE":
+                return Stone.none();
+        }
     }
 }

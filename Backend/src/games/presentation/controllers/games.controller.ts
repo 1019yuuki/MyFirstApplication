@@ -1,33 +1,43 @@
 import { Body, Controller, Param, Patch, Post } from '@nestjs/common';
-import { GamesUseCase } from '../../use-cases/games.use-case';
-import { Board } from 'src/games/domain/entities/board.model';
+import { CreateGameResponseDto } from './dto/response/create-game.response.dto';
+import { type UpdateGameRequestDto } from './dto/request/update-game.request.dto';
+import { UpdateGameResponseDto } from './dto/response/update-game.response.dto';
+import { CreateGameUseCase } from 'src/games/use-cases/create-game.use-case';
+import { UpdateGameUseCase } from 'src/games/use-cases/update-game.use-case';
 
 @Controller('games')
 export class GamesController {
 
-    constructor(private gamesService: GamesUseCase) { }
+    constructor(private createGameUseCase: CreateGameUseCase, private updateGameUseCase: UpdateGameUseCase) { }
 
     @Post('new_game')
     async CreateGame(): Promise<CreateGameResponseDto> {
         console.log("CreateGame was called.");
 
         // ゲームを新規作成する
-        const game = await this.gamesService.createGame();
+        const game = await this.createGameUseCase.execute();
         console.log("Game was created.")
 
         // 作成したゲームを返却する
-        return { board: boardToStoneType(game.board), nextStone: game.nextStone.stoneType, gameId: game.id };
+        return {
+            board: game.board.grid.map(row => row.map(stone => stone.type)),
+            nextStone: game.nextStone.type,
+            gameId: game.id
+        };
     }
 
     @Patch(':id')
-    async UpdateGameById(@Body() dto: UpdateGameByIdRequestDto, @Param("id") id: string): Promise<UpdateGameResponseDto> {
+    async UpdateGameById(@Body() { x, y }: UpdateGameRequestDto, @Param("id") id: string): Promise<UpdateGameResponseDto> {
         console.log("UpdateGameById was called.");
 
         // 石を打つ
-        const updated = await this.gamesService.updateGameById(id, dto.x, dto.y);
+        const updated = await this.updateGameUseCase.execute({ id, x, y });
 
         // 更新したゲームを返却する
-        return { board: boardToStoneType(updated.board), nextStone: updated.nextStone.stoneType };
+        return {
+            board: updated.board.grid.map(row => row.map(stone => stone.type)),
+            nextStone: updated.nextStone.type
+        };
     }
 
     @Patch(':id/cpu')
@@ -35,34 +45,12 @@ export class GamesController {
         console.log("UpdateGameByCpu was called.");
 
         // 石を打つ
-        const updated = await this.gamesService.updateGameByCpu(id);
+        const updated = await this.updateGameUseCase.execute({ id });
 
         // 更新したゲームを返却する
-        return { board: boardToStoneType(updated.board), nextStone: updated.nextStone.stoneType };
-
+        return {
+            board: updated.board.grid.map(row => row.map(stone => stone.type)),
+            nextStone: updated.nextStone.type
+        };
     }
-}
-
-interface UpdateGameByIdRequestDto {
-    x: number,
-    y: number
-}
-
-interface UpdateGameResponseDto {
-    board: DtoStoneType[][],
-    nextStone: DtoStoneType
-}
-
-interface CreateGameResponseDto {
-    board: DtoStoneType[][],
-    nextStone: DtoStoneType,
-    gameId: string
-}
-
-type DtoStoneType = "BLACK" | "WHITE" | "NONE"
-
-const boardToStoneType = (board: Board): DtoStoneType[][] => {
-    return board.grid.map((row) => {
-        return [...(row.map((stone) => stone.stoneType))];
-    })
 }

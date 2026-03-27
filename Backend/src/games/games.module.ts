@@ -1,12 +1,14 @@
 import { Module } from '@nestjs/common';
 import { GamesController } from './presentation/controllers/games.controller';
-import { GamesUseCase } from './use-cases/games.use-case';
 import { PrismaGamesRepository } from './infrastructure/repositories/prisma-games.repository';
+import { CreateGameUseCase } from './use-cases/create-game.use-case';
+import { UpdateGameUseCase } from './use-cases/update-game.use-case';
 
 @Module({
   controllers: [GamesController],
   providers: [
-    GamesUseCase,
+    CreateGameUseCase,
+    UpdateGameUseCase,
     {
       provide: "IGamesRepository",
       useClass: PrismaGamesRepository
