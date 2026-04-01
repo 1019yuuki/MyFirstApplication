@@ -18,6 +18,10 @@ export class Board {
         return this.removeSentinel();
     }
 
+    get numericGrid(): number[][]{
+        return this.grid.map(row => row.map(stone => stone.toNumber()))
+    }
+
     private static addSentinel(grid: Stone[][]): Stone[][] {
         const sentinelGrid: Stone[][] = [];
         const sentinelRow: Stone[] = [Stone.wall(), Stone.wall(), Stone.wall(), Stone.wall(), Stone.wall(), Stone.wall(), Stone.wall(), Stone.wall(), Stone.wall(), Stone.wall()];

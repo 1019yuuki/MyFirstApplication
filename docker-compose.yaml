@@ -37,5 +37,12 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql
 
+  ai:
+    container_name: ai
+    build: ./ai
+    volumes:
+      - ./ai:/workspace
+    tty: true
+
 volumes:
   postgres_data:

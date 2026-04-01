@@ -44,6 +44,18 @@ export class Stone {
         return this._type === compare._type
     }
 
+    toNumber(): number {
+        switch (this._type) {
+            case "BLACK":
+                return 1;
+            case "WHITE":
+                return -1;
+            case "NONE":
+            case "WALL":
+                return 0;
+        }
+    }
+
     static black(): Stone {
         return new Stone("BLACK");
     }
