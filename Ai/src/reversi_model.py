@@ -3,44 +3,74 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 
-class ReversiNet(nn.Module):
-    def __init__(self):
-        super(ReversiNet, self).__init__()
+# 同じ形のまま情報を次に渡す「残差ブロック」
+class ResBlock(nn.Module):
+    def __init__(self, channels):
+        super().__init__()
+        self.conv1 = nn.Conv2d(channels, channels, kernel_size=3, padding=1)
+        self.bn1 = nn.BatchNorm2d(channels)
+        self.conv2 = nn.Conv2d(channels, channels, kernel_size=3, padding=1)
+        self.bn2 = nn.BatchNorm2d(channels)
 
-         # 1. 畳み込み層：4層重ねることで盤面全体(8x8)の相関をカバーする
-        # (3ch -> 64ch -> 128ch -> 128ch -> 128ch)
-        self.conv1 = nn.Conv2d(3, 64, kernel_size=3, padding=1)
-        self.conv2 = nn.Conv2d(64, 128, kernel_size=3, padding=1)
-        self.conv3 = nn.Conv2d(128, 128, kernel_size=3, padding=1)
-        self.conv4 = nn.Conv2d(128, 128, kernel_size=3, padding=1)
+    def forward(self, x):
+        residual = x
+        out = F.relu(self.bn1(self.conv1(x)))
+        out = self.bn2(self.conv2(out))
+        out += residual # ここで元の入力を足す（Skip Connection）
+        return F.relu(out)
+
+class ReversiNet(nn.Module):
+
+
+    def __init__(self, num_res_blocks=4): # 2層×4ブロック = 8層のCNN部分
+        super().__init__()
+        # 入力層 (5ch -> 128ch)
+        self.start_conv = nn.Sequential(
+            nn.Conv2d(5, 128, kernel_size=3, padding=1),
+            nn.BatchNorm2d(128),
+            nn.ReLU()
+        )
         
-        # 2. 全結合層：128枚の「加工済み地図」を1本の棒(8192次元)にして統合判断
-        self.fc1 = nn.Linear(128 * 8 * 8, 256)
-        self.fc2 = nn.Linear(256, 64) # 最終的な64マスの生スコア
+        # 中間層（ResBlockを重ねる）
+        self.res_blocks = nn.ModuleList([ResBlock(128) for _ in range(num_res_blocks)])
+        
+        # Policy Head (指し手)
+        self.policy_head = nn.Sequential(
+            nn.Conv2d(128, 2, kernel_size=1),
+            nn.BatchNorm2d(2),
+            nn.ReLU(),
+            nn.Flatten(),
+            nn.Linear(2 * 8 * 8, 64),
+            # nn.LogSoftmax(dim=1)
+        )
+        
+        # Value Head (勝敗評価)
+        self.value_head = nn.Sequential(
+            nn.Conv2d(128, 1, kernel_size=1),
+            nn.BatchNorm2d(1),
+            nn.ReLU(),
+            nn.Flatten(),
+            nn.Linear(1 * 8 * 8, 128),
+            nn.ReLU(),
+            nn.Linear(128, 1),
+            nn.Tanh()
+        )
 
     def forward(self, x):
 
-        # xの形状: (Batch, 3, 8, 8)
-        # 入力xの3枚目（合法手フラグ）をマスク用に取り出しておく
         # maskの形状: (Batch, 64) にフラット化
         legal_mask = x[:, 2, :, :].view(-1, 64)
+
+        x = self.start_conv(x)
+        for block in self.res_blocks:
+            x = block(x)
         
-        # --- CNN層による特徴抽出 ---
-        x = F.relu(self.conv1(x))
-        x = F.relu(self.conv2(x))
-        x = F.relu(self.conv3(x))
-        x = F.relu(self.conv4(x))
-        
-        # --- Flatten & 全結合層 ---
-        x = x.view(-1, 128 * 8 * 8)
-        x = F.relu(self.fc1(x))
-        raw_score = self.fc2(x) # 64マスの「生の打ちたさスコア」
-        
-        # --- 合法手マスク処理 (ロジックの強制) ---
-        stable_mask = legal_mask + 1e-8 
-        masked_score = raw_score + (stable_mask - 1.0) * 1e4
-        
-        # --- Softmaxによる確率化 ---
-        # 非合法手は e^(-∞) = 0 となり、確率が厳密に0になる
-        return F.log_softmax(masked_score, dim=1)
-    
+        unmasked = self.policy_head(x)
+
+        # 非合法手の場所に非常に小さい値を足す (Softmax後にほぼ0になる)
+        # legal_maskが1の場所は +0、0の場所は -1,000,000,000
+        masked_p = unmasked + (legal_mask - 1.0) * 1e9
+        policy = F.log_softmax(masked_p, dim=1)
+
+        value = self.value_head(x)
+        return policy, value

@@ -12,7 +12,7 @@ def export_to_onnx(model_path, onnx_out_directory, file_name = "model"):
     onnx_path = onnx_out_directory + "/" + file_name + ".onnx"
 
     # ONNX変換には「ダミーの入力データ」が必要です（形状を教えるため）
-    dummy_input = torch.randn(1, 3, 8, 8) 
+    dummy_input = torch.randn(1, 5, 8, 8) 
 
     torch.onnx.export(
         model, 

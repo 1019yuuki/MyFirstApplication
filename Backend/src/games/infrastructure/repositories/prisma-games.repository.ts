@@ -24,6 +24,7 @@ export class PrismaGamesRepository implements IGamesRepository {
             id: created.id,
             board: this.ConvertBoardFromFlat(created.board),
             nextStone: this.createStone(created.nextStone),
+            turn: 1,
             version: created.version
         });
     }
@@ -43,11 +44,12 @@ export class PrismaGamesRepository implements IGamesRepository {
             id: game.id,
             board: this.ConvertBoardFromFlat(game.board),
             nextStone: this.createStone(game.nextStone),
+            turn: game.turn,
             version: game.version
         });
     }
 
-    async update({ id, board, nextStone, version }: Game): Promise<Game> {
+    async update({ id, board, nextStone, turn, version }: Game): Promise<Game> {
 
         const updated = await this.prisma.game.update({
             where: {
@@ -57,6 +59,7 @@ export class PrismaGamesRepository implements IGamesRepository {
             data: {
                 board: this.ConvertBoardToFlat(board),
                 nextStone: nextStone.type,
+                turn,
                 version: version++
             }
         });
@@ -65,6 +68,7 @@ export class PrismaGamesRepository implements IGamesRepository {
             id: updated.id,
             board: this.ConvertBoardFromFlat(updated.board),
             nextStone: this.createStone(updated.nextStone),
+            turn: updated.turn,
             version: updated.version
         });
     }

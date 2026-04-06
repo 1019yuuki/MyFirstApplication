@@ -7,6 +7,7 @@ data = np.load("./data/npz/train_data.npz")
 
 X = torch.from_numpy(data['x']).float()
 Y = torch.from_numpy(data['y']).long()
+Z = torch.from_numpy(data['z']).float()
 
 # 学習ステップを実行する
-train_step(X, Y, 128, 1, 0.00001, "./models/reversi_model.pth", "./logs/training_log.csv")
+train_step(X, Y, Z, 512, 1, 0.00005, "./models/reversi_model.pth", "./logs/training_log.csv")

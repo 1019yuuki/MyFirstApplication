@@ -83,7 +83,7 @@ export const LocalBattlePage = () => {
                 nextStone === "NONE" &&
                 (
                     <>
-                        <p style={{ color: 'red' }}>勝敗が決定しました！<Link to={"/"}>Homeに戻る</Link></p>
+                        <p style={{ color: 'red' }}>勝敗が決定しました！<Link style={{padding:"10px"}} to={"/"}>Homeに戻る</Link><Link style={{padding:"10px"}} to={"/game/local"} reloadDocument>もう一度対戦する</Link></p>
                         <p style={{ color: 'red' }}>{`黒：${board.flat().filter(stone => stone === "BLACK").length}　白：${board.flat().filter(stone => stone === "WHITE").length}`}</p>
                     </>
                 )

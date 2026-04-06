@@ -46,7 +46,7 @@ export class Board {
         return this._grid[internalCell.y][internalCell.x];
     }
 
-    updateBoard(stone: Stone, ...cells: Cell[]): Board {
+    private updateBoard(stone: Stone, ...cells: Cell[]): Board {
         const grid: Stone[][] = this._grid.map(row => [...row]);
 
         cells.map(cell => {
@@ -142,6 +142,10 @@ export class Board {
 
         // 番兵分の番地をずらす
         return flipPoints;
+    }
+
+    count(target: Stone): number{
+        return this.grid.flat().filter(stone => stone.equal(target)).length;
     }
 }
 

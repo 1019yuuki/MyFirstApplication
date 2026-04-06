@@ -3,6 +3,7 @@ import { Board, initBoard } from '../Components/Board/Board'
 import type { StoneType } from '../Components/Stone/Stone';
 import { ModalOverlay } from '../Components/ModalOverlay/ModalOverlay'
 import { Link } from 'react-router-dom';
+import { PrimaryButton } from '../Components/Button/PrimaryButton';
 
 export const CpuBattlePage = () => {
 
@@ -11,6 +12,7 @@ export const CpuBattlePage = () => {
     const [gameId, setGameId] = useState<string>("");
     const [errMsg, setErrMsg] = useState<string>("");
     const [isOpen, setIsOpen] = useState<boolean>(false);
+    const [myStone, setMyStone] = useState<StoneType>("NONE");
 
     useEffect(() => {
 
@@ -41,7 +43,6 @@ export const CpuBattlePage = () => {
         //盤面が更新された場合、CPUのターンであればCPUターンのAPIを実行する
         const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
-
         const execCpuTurn = async () => {
 
             try {
@@ -67,11 +68,16 @@ export const CpuBattlePage = () => {
             }
         }
 
+        if (myStone === "NONE") {
+            // 自分の石を決定するまでは処理しない
+            return;
+        }
+
         // 白がコンピュータのターン
-        if (nextStone === "WHITE") {
+        if (nextStone === (myStone === "BLACK" ? "WHITE" : "BLACK")) {
             execCpuTurn();
         }
-    }, [board])
+    }, [board, myStone])
 
     const handleClick = (row: number, col: number) => {
 
@@ -121,12 +127,12 @@ export const CpuBattlePage = () => {
                 nextStone === "NONE" &&
                 (
                     <>
-                        <p style={{ color: 'red' }}>勝敗が決定しました！<Link to={"/"}>Homeに戻る</Link></p>
+                        <p style={{ color: 'red' }}>勝敗が決定しました！<Link style={{padding:"10px"}} to={"/"}>Homeに戻る</Link><Link style={{padding:"10px"}} to={"/game/cpu"} reloadDocument>もう一度対戦する</Link></p>
                         <p style={{ color: 'red' }}>{`黒：${board.flat().filter(stone => stone === "BLACK").length}　白：${board.flat().filter(stone => stone === "WHITE").length}`}</p>
                     </>
                 )
             }
-            {nextStone !== "NONE" && <p>{`次は ${nextStone === "BLACK" ? "黒" : "白"} の番です`}</p>}
+            {nextStone !== "NONE" && <p>{`次は ${nextStone === "BLACK" ? `黒（${myStone === 'BLACK' ? "あなた" : "CPU"}）` : `白（${myStone === 'WHITE' ? "あなた" : "CPU"}）`} の番です`}</p>}
             {errMsg !== "" && <p style={{ color: 'red' }}>{errMsg}</p>}
             <Board board={board} handleClick={handleClick}></Board>
             <ModalOverlay isOpen={isOpen}>
@@ -134,6 +140,16 @@ export const CpuBattlePage = () => {
                     <span style={{ fontSize: "20px" }}>コンピュータが操作中です...</span>
                 </div>
             </ModalOverlay>
+
+            <ModalOverlay isOpen={myStone === "NONE"}>
+                <div style={{ backgroundColor: "#EEE", padding: "100px", borderRadius: "10px" }}>
+                    <h1 style={{ margin: "0px 0px 50px 0px"}}>石を選択してください</h1>
+                    <hr />
+                    <PrimaryButton onClick={() => setMyStone("BLACK")}>黒</PrimaryButton>
+                    <PrimaryButton onClick={() => setMyStone("WHITE")}>白</PrimaryButton>
+                </div>
+            </ModalOverlay>
+
         </>
     )
 }

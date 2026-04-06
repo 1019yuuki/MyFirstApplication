@@ -5,7 +5,7 @@ import { Stone } from "../value-objects/stone.vo"
 
 export class Game {
 
-    constructor(private readonly _game: { readonly id: string, board: Board, nextStone: Stone, version: number }) { }
+    constructor(private readonly _game: { readonly id: string, board: Board, nextStone: Stone, turn: number, version: number }) { }
 
     get id(): string {
         return this._game.id
@@ -17,6 +17,10 @@ export class Game {
 
     get nextStone(): Stone {
         return this._game.nextStone
+    }
+
+    get turn(): number {
+        return this._game.turn
     }
 
     get version(): number {
@@ -40,6 +44,7 @@ export class Game {
         }
 
         this._game.nextStone = nextStone;
+        this._game.turn++;
     }
 
     getCpuPlaceCell(): Cell {
@@ -54,6 +59,6 @@ export class Game {
         }
 
         // 決定したセルを返却する
-        return  putablePoints[putIndex];
+        return putablePoints[putIndex];
     }
 }

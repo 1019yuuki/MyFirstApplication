@@ -18,6 +18,7 @@ model Game {
   id        String    @id @default(uuid()) @db.Uuid
   board     StoneType[]  @default([])
   nextStone StoneType @default(BLACK) @map("next_stone")
+  turn Int @default(1)
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp(0)
   updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamp(0)
   version   Int       @default(1)
